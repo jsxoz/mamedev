@@ -1745,7 +1745,8 @@ void model1_state::model1(machine_config &config)
 	// SOYS -- Uses the renderScale. Can read from mame config ---------------------------------------
 	// You can try with XTAL(32'000'000) but everything speeds up double.
 
-	renderScale = 4;
+	renderScaleX = 1;
+	renderScaleY = 1;
 	renderBackground = 1;
 	renderWireframe = 0;
 
@@ -1756,28 +1757,34 @@ void model1_state::model1(machine_config &config)
 	// over 100, scale in antialiased wireframe mode no bitmap background
 	// over 200, scale in antialiased wireframe mode with bitmap background
 
-	if(config.options().int_scale_x())
+	if(config.options().int_scale_x() > 0)
 	{
-		renderScale = config.options().int_scale_x();
-		if(renderScale > 100)
+		renderScaleX = config.options().int_scale_x();
+		if(renderScaleX > 100)
 		{
 			// Wireframe scaling mode without background
-			renderScale = renderScale - 100;
+			renderScaleX = renderScaleX - 100;
 			renderWireframe = 1;
 			renderBackground = 0;
 		}
-		else if(renderScale > 200)
+		else if(renderScaleX > 200)
 		{
 			// Wireframe mode scaling with background
-			renderScale = renderScale - 200;
+			renderScaleX = renderScaleX - 200;
 			renderWireframe = 1;
 			renderBackground = 1;
 		}
 	}
 
+	if(config.options().int_scale_y() > 0)
+	{
+		renderScaleY = config.options().int_scale_y();
+	}
+
+
 	m_screen->set_raw(XTAL(16'000'000), originalBitmapWidth, 0/*+69*/, 
-		originalCliprectX2 * renderScale/*+69*/, originalBitmapHeight, 0/*+25*/, 
-		originalCliprectY2 * renderScale/*+25*/);
+		originalCliprectX2 * renderScaleX/*+69*/, originalBitmapHeight, 0/*+25*/, 
+		originalCliprectY2 * renderScaleY/*+25*/);
 	
 	//------------------------------------------------------------------------------------------------
 
