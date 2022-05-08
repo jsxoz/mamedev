@@ -1,7 +1,7 @@
 
 # **MAME fork details** #
 - First and foremost, all credits to the official mamedev team and contributors for allowing us all to experience childhood arcade gaming memories. I look for no credit whatsoever with this fork. Just wanted to share in case there are people in the same mindset as me.
-- This is basically a mod fork for model1 3D rendering. Not suitable for offical update to mamedev as it deviates heavily away from original model1 capabilities and experiences. Also deviates heavily away from official mame coding styles and frameworks. So leaving this here for those interested. It's just for fun as I wanted to play model1 Virtua Racing with high resolution 3D with the mame bgfx filters.
+- This is basically a mod fork for model1 3D rendering. Not suitable for offical update to mamedev as it deviates heavily away from original model1 capabilities and experiences. Also deviates heavily away from official mame coding styles, standards and frameworks. So leaving this here for those interested. It's just for fun as I wanted to play model1 Virtua Racing with high resolution 3D with the mame bgfx filters.
 
 Might look into modifying for the following if I get the time:
 * No z-culling
