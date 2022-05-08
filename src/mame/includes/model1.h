@@ -72,7 +72,8 @@ public:
 	// 5 will give you almost 1440p, which is OK for intel 11th Gen i7 mobile
 	// with pyhsical screen of 1080p, software rendering
 	
-	int renderScale = 4;
+	int renderScaleX = 1;
+	int renderScaleY = 1;
 
 	// Wire frame mode for 3D. 1 yes, 0 no.
 	int renderWireframe = 0;
