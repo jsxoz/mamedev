@@ -369,7 +369,6 @@ void model1_state::fill_quad(bitmap_rgb32 &bitmap, view_t *view, const quad_t& q
 void model1_state::draw_line(bitmap_rgb32 &bitmap, 
 	model1_state::view_t *view, int color, int x1, int y1, int x2, int y2) const
 {
-	// SOYS
 	if ((x1 < view->x1 && x2 < view->x1) ||
 		(x1 > view->x2 && x2 > view->x2) ||
 		(y1 < view->y1 && y2 < view->y1) ||
@@ -1194,15 +1193,8 @@ float model1_state::compute_specular(glm::vec3& normal, glm::vec3& light, float 
 	return 0;
 }
 
-// SOYS - This will load all polies for an object. Which can come from RAM or ROM.
-// So idea is to initially cache these to file. The current one will be used, but
-// the rest will come from file and loaded to memory. This will allow us to control
-// the z-cull ourselves.
-
 void model1_state::push_object(uint32_t tex_adr, uint32_t poly_adr, uint32_t size)
 {
-	uint32_t actualSize = 0;
-
 	// Protect against bad data when attacking a super destroyer
 	if(tex_adr == 0xffffffff || size >= 0x1000000)
 		return;
@@ -1211,22 +1203,11 @@ void model1_state::push_object(uint32_t tex_adr, uint32_t poly_adr, uint32_t siz
 	int dump;
 #endif
 
-	// SOYS - TODO. Cache these to file then reload? So we can
-	// render ALL polies.
-
 	float *poly_data;
 	if (poly_adr & 0x800000)
-	{
-		// SOYS - This polygon changes (hence from RAM)(?)
 		poly_data = (float *)m_poly_ram.get();
-	}
 	else
-	{
-		//popmessage("Poly from rom: %ld", romObjectCount++);
-
-		// SOYS - These polygons DO NOT change (hence from ROM)(?)
 		poly_data = (float *)m_poly_rom.target();
-	}
 
 	poly_adr &= 0x7fffff;
 #if 0
@@ -1295,16 +1276,8 @@ void model1_state::push_object(uint32_t tex_adr, uint32_t poly_adr, uint32_t siz
 	poly_adr += 6;
 
 	
-	// This gets all the polygon for the object
-
 	for (int i = 0; i < size; i++)
 	{
-		// Keep count of how many polygons in the object
-
-		actualSize++;
-
-		//popmessage("SOYS Poly count: %ld, actual: %ld", size, actualSize);		
-
 #if 0
 		LOG_TGP(("VIDEO:     %08x (%f, %f, %f) (%f, %f, %f) (%f, %f, %f)\n",
 			*(uint32_t *)(poly_data + poly_adr) & ~(0x01800303),
@@ -1790,9 +1763,6 @@ void model1_state::tgp_render(bitmap_rgb32 &bitmap, const rectangle &cliprect)
 		int zz = 0;
 		LOG_TGP(("VIDEO: render list %d\n", get_list_number()));
 
-		// SOYS - Seems to be which screen(?) Flips between 1 and 0
-		// popmessage("list number: %d", get_list_number());
-
 		m_view->init_translation_matrix();
 
 		int list_offset = 0;
@@ -1806,7 +1776,6 @@ void model1_state::tgp_render(bitmap_rgb32 &bitmap, const rectangle &cliprect)
 				break;
 			case 1:
 			case 0x41:
-				// SOYS - This is how the rendering pipeline is arranged i think..?
 				// 1 = plane 1
 				// 2 = ??  draw object (413d3, 17c4c, e)
 				// 3 = plane 2
@@ -1817,8 +1786,7 @@ void model1_state::tgp_render(bitmap_rgb32 &bitmap, const rectangle &cliprect)
 				if (true || zz >= 666)
 				{
 					push_object(readi(list_offset + 2), readi(list_offset + 4), readi(list_offset + 6));
-					
-					// SOYS - This does cull out some polygons but not z-cull
+					// SOYS - TODO: How to change z-cull?					
 					//push_object(readi(list_offset + 2), readi(list_offset + 4), 16000);
 				}
 				list_offset += 8;
@@ -1861,8 +1829,8 @@ void model1_state::tgp_render(bitmap_rgb32 &bitmap, const rectangle &cliprect)
 				x2 = cliprect.max_x;
 				y2 = cliprect.max_y;
 
-				m_view->set_viewport(xc * renderScale, yc * renderScale, x1 * renderScale, 
-										x2, y1 * renderScale, y2);
+				m_view->set_viewport(xc * renderScaleX, yc * renderScaleY, x1 * renderScaleX, 
+										x2, y1 * renderScaleY, y2);
 
 				//---------------------------------------------------------------------------------
 				#endif
@@ -1930,17 +1898,15 @@ void model1_state::tgp_render(bitmap_rgb32 &bitmap, const rectangle &cliprect)
 				#if 1
 				// SOYS - Scale up to cliprect size -----------------------------------------------
 
-				m_view->set_zoom(readf(list_offset + 2) * 4 * renderScale, 
-					readf(list_offset + 4) * 4 * renderScale);
+				m_view->set_zoom(readf(list_offset + 2) * 4 * renderScaleX, 
+					readf(list_offset + 4) * 4 * renderScaleY);
 
 				//---------------------------------------------------------------------------------
 				#endif
 
 				#if 0
 				// Original code
-
-				m_view->set_zoom(readf(list_offset + 2) * 4 * renderScale, 
-					readf(list_offset + 4) * 4 * renderScale);
+				m_view->set_zoom(readf(list_offset + 2) * 4, readf(list_offset + 4) * 4);
 				#endif
 
 				list_offset += 6;
@@ -1971,8 +1937,8 @@ void model1_state::tgp_render(bitmap_rgb32 &bitmap, const rectangle &cliprect)
 				// SOYS the translation for the view - Scale up so everything is move to correct
 				// place on screen ----------------------------------------------------------------
 
-				m_view->set_view_translation(readf(list_offset + 2) * renderScale, 
-								readf(list_offset + 4) * renderScale);
+				m_view->set_view_translation(readf(list_offset + 2) * renderScaleX, 
+								readf(list_offset + 4) * renderScaleY);
 
 				//---------------------------------------------------------------------------------
 				#endif
@@ -2015,7 +1981,6 @@ void model1_state::tgp_scan()
 #endif
 	if (!m_render_done && (m_listctl[1] & 0x1f) == 0x1f)
 	{
-		// SOYS another zcull?
 		set_current_render_list();
 		// Skip everything but the data uploads
 		LOG_TGP(("VIDEO: scan list %d\n", get_list_number()));
@@ -2052,13 +2017,9 @@ void model1_state::tgp_scan()
 					break;
 				}
 				case 5:
-				{
-					// SOYS - zcull Here we are loading in all the polygons
-					// What if we boost the numbers
-					
+				{					
 					int adr = readi(list_offset + 2);
 					int len = readi(list_offset + 4);
-					//len = 8000;
 					for (int i = 0; i < len; i++)
 					{
 						m_poly_ram[adr - 0x800000 + i] = readi(list_offset + 2 * i + 6);
@@ -2131,7 +2092,6 @@ void model1_state::video_start()
 	m_quadpt = &m_quaddb[0];
 	m_listctl[0] = m_listctl[1] = 0;
 
-	// SOYS - Disabled clipping
 	m_clipfn[0].m_isclipped = &model1_state::fclip_isc_bottom;
 	m_clipfn[0].m_clip = &model1_state::fclip_clip_bottom;
 	m_clipfn[1].m_isclipped = &model1_state::fclip_isc_top;
@@ -2148,7 +2108,7 @@ void model1_state::video_start()
 
 // SOYS -- The bitmap scaler.. Very simplified for speed. Only does multiples
 // of the originalBitmapWidth and originalBitmapHeight.. Hence we are using
-// the pixel with to be renderScale.
+// the pixel with to be renderScaleX and renderScaleY.
 
 // You should have the tBitmap size, the renderScale * source bitmap sBitmap size
 // You you get a whole number pixel width and height
@@ -2167,7 +2127,7 @@ void model1_state::CopyTmpBitmapToBitmap(
 
 	const int sHeight = sBitmap.width();
 	const int tHeight = tBitmap.height();
-	const int renderScaleMinus1 = renderScale - 1;
+	const int renderScaleYMinus1 = renderScaleY - 1;
 
 	uint32_t* sBP = (uint32_t*) sBitmap.raw_pixptr(0);
 	uint32_t* tBP = (uint32_t*) tBitmap.raw_pixptr(0);
@@ -2176,13 +2136,13 @@ void model1_state::CopyTmpBitmapToBitmap(
 	for(int r = 0; r < sHeight; r++)
 	{
 		// Repeat each row for renderScale times
-		for(int r2 = 0; r2 < renderScale && cY++ < tHeight; r2++)
+		for(int r2 = 0; r2 < renderScaleY && cY++ < tHeight; r2++)
 		{
 			// Repeat each pixel for renderScale times
 			cX = 0;
 			for(int c = 0; c < sWidth; c++)
 			{
-				for(int c2 = 0; c2 < renderScale && cX++ < tWidth; c2++)
+				for(int c2 = 0; c2 < renderScaleX && cX++ < tWidth; c2++)
 				{
 					if(*sBP != transparentColor)
 						*tBP++ = *sBP;
@@ -2192,7 +2152,7 @@ void model1_state::CopyTmpBitmapToBitmap(
 				sBP++;
 			}
 
-			if(r2 == renderScaleMinus1) break;
+			if(r2 == renderScaleYMinus1) break;
 
 			// Reset original row pix pointer
 			sBP -= sWidth;
@@ -2356,9 +2316,8 @@ uint32_t model1_state::screen_update_model1(screen_device &screen, bitmap_rgb32 
 #endif
 
 #if 1
-	// SOYS - New scaled version
-	// Draw to another buffer that matches original screen
-	// then scale up
+	// SOYS - New scaled version. Draw to another buffer that matches 
+	// original screen then scale up
 
 	tmpBitmap2.fill(0x7fffffff, originalCliprect);
 	m_tiles->draw(screen, tmpBitmap2, originalCliprect, 7, 0, 0);
