@@ -4,7 +4,7 @@
 - This is basically a mod fork for model1 3D rendering. Not suitable for offical update to mamedev as it deviates heavily away from original model1 capabilities and experiences. Also deviates heavily away from official mame coding styles, standards and frameworks. So leaving this here for those interested. It's just for fun as I wanted to play model1 Virtua Racing with high resolution 3D with the mame bgfx filters.
 
 Might look into modifying for the following if I get the time:
-* No z-culling
+* No max draw distance
 * HW 3D rendering
 * Ray Tracing
 * VR
